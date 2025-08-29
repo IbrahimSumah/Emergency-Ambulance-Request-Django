@@ -76,7 +76,7 @@
                         <h5 class="mb-0">
                             <i class="bi bi-person-check me-2"></i>Currently Assigned Requests
                         </h5>
-                        <a href="{% url 'ambulance:request_list' %}" class="btn btn-sm btn-outline-primary">
+                        <a href="{% url 'ambulance:paramedic_assigned' %}" class="btn btn-sm btn-outline-primary">
                             View All
                         </a>
                     </div>
@@ -175,7 +175,7 @@
                             <i class="bi bi-person me-2"></i>Update Profile
                         </a>
                         
-                        <button class="btn btn-outline-info" onclick="toggleAvailability()">
+                        <button class="btn btn-outline-info" id="pd-availability-toggle" onclick="toggleAvailability()">
                             <i class="bi bi-toggle-on me-2"></i>Toggle Availability
                         </button>
                     </div>
@@ -189,7 +189,7 @@
                             <i class="bi bi-exclamation-triangle me-2"></i>Pending Requests
                         </h6>
                         <p class="mb-2">There are {{ stats.pending_requests }} pending requests available for assignment.</p>
-                        <a href="{% url 'ambulance:request_list' %}" class="btn btn-sm btn-warning">
+                        <a href="{% url 'ambulance:paramedic_pending' %}" class="btn btn-sm btn-warning">
                             View Pending
                         </a>
                     </div>
@@ -220,6 +220,72 @@
                             </p>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Requests (Top 5) -->
+    <div class="row">
+        <div class="col-lg-12 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-clock me-2"></i>Pending Requests</h5>
+                    <a href="{% url 'ambulance:paramedic_pending' %}" class="btn btn-sm btn-outline-warning">View All Pending</a>
+                </div>
+                <div class="card-body">
+                    {% if recent_pending %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Patient</th>
+                                        <th>Priority</th>
+                                        <th>Location</th>
+                                        <th>Created</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for request in recent_pending %}
+                                    <tr>
+                                        <td><strong>#{{ request.id }}</strong></td>
+                                        <td>
+                                            <i class="bi bi-person text-primary me-1"></i>
+                                            {{ request.patient.get_full_name|default:request.patient.username }}
+                                        </td>
+                                        <td>
+                                            <span class="status-badge priority-{{ request.priority }}">{{ request.get_priority_display }}</span>
+                                        </td>
+                                        <td>
+                                            <small>
+                                                {% if request.pickup_address %}
+                                                    {{ request.pickup_address|truncatechars:30 }}
+                                                {% elif request.pickup_latitude and request.pickup_longitude %}
+                                                    {{ request.pickup_latitude }}, {{ request.pickup_longitude }}
+                                                {% else %}
+                                                    -
+                                                {% endif %}
+                                            </small>
+                                        </td>
+                                        <td><small>{{ request.created_at|date:"M d, Y H:i" }}</small></td>
+                                        <td>
+                                            <form method="post" action="{% url 'ambulance:accept_request' request.pk %}">
+                                                {% csrf_token %}
+                                                <button class="btn btn-sm btn-success" type="submit">
+                                                    <i class="bi bi-check2 me-1"></i>Accept
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0">No pending requests at the moment.</p>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -268,10 +334,35 @@
         }
     }
     
-    // Function to toggle availability
+    // Function to toggle availability (paramedic)
     function toggleAvailability() {
-        // Add AJAX call here to toggle availability
-        console.log('Toggling availability');
+        const button = document.getElementById('pd-availability-toggle');
+        if (!button) return;
+        const originalHtml = button.innerHTML;
+        button.disabled = true;
+        button.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Updating...';
+        fetch('{% url "accounts:toggle_availability" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data && data.success) {
+                button.className = data.is_available ? 'btn btn-outline-info' : 'btn btn-outline-secondary';
+                button.innerHTML = '<i class="bi bi-toggle-on me-2"></i>' + (data.is_available ? 'Set Unavailable' : 'Set Available');
+            } else {
+                button.innerHTML = originalHtml;
+            }
+        })
+        .catch(() => {
+            button.innerHTML = originalHtml;
+        })
+        .finally(() => {
+            button.disabled = false;
+        });
     }
 </script>
 

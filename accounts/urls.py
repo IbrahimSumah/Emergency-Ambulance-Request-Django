@@ -14,6 +14,9 @@ urlpatterns = [
     path('profile/edit/', views.edit_profile_view, name='edit_profile'),
     path('profile/change-password/', views.change_password_view, name='change_password'),
     
+    # Admin Management
+    path('manage-users/', views.manage_users_view, name='manage_users'),
+    
     # AJAX endpoints
     path('api/toggle-availability/', views.toggle_availability, name='toggle_availability'),
     

@@ -244,6 +244,7 @@
             }
         }
     </style>
+    
     {% block extra_css %}{% endblock %}
 </head>
 <body class="d-flex flex-column min-vh-100">
@@ -268,7 +269,7 @@
                             </a>
                         </li>
                         
-                        {% if user.is_patient %}
+                        {% if user.is_authenticated and user.role == 'patient' %}
                             <li class="nav-item">
                                 <a class="nav-link" href="{% url 'ambulance:create_request' %}">
                                     <i class="bi bi-plus-circle me-1"></i>Request Ambulance
@@ -282,22 +283,32 @@
                             </a>
                         </li>
                         
-                        {% if user.is_admin_user %}
+                        {% if user.is_authenticated and user.role == 'admin' %}
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'ambulance:ambulance_list' %}">
-                                    <i class="bi bi-truck me-1"></i>Ambulances
+                                <a class="nav-link" href="{% url 'accounts:manage_users' %}">
+                                    <i class="bi bi-people me-1"></i>Manage Users
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="/admin/">
-                                    <i class="bi bi-gear me-1"></i>Admin
+                                <a class="nav-link" href="{% url 'ambulance:ambulance_list' %}">
+                                    <i class="bi bi-truck me-1"></i>Ambulances
                                 </a>
                             </li>
                         {% endif %}
                     </ul>
                     
                     <ul class="navbar-nav">
-                        {% if user.is_paramedic %}
+                        {% if user.is_authenticated and user.role == 'paramedic' %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'ambulance:paramedic_assigned' %}">
+                                    <i class="bi bi-person-check me-1"></i>Assigned
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'ambulance:paramedic_pending' %}">
+                                    <i class="bi bi-clock me-1"></i>Pending
+                                </a>
+                            </li>
                             <li class="nav-item me-3">
                                 <button class="btn btn-sm btn-outline-light" id="availability-toggle">
                                     <i class="bi bi-circle-fill me-1" id="availability-icon"></i>

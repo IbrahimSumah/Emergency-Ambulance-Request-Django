@@ -1,0 +1,37 @@
+<tr>
+    <td><strong>#{{ request.id }}</strong></td>
+    {% if not user.is_patient %}
+    <td>
+        <i class="bi bi-person text-primary me-1"></i>
+        {{ request.patient.get_full_name|default:request.patient.username }}
+    </td>
+    {% endif %}
+    <td>
+        <span class="status-badge status-{{ request.status }}">{{ request.get_status_display }}</span>
+    </td>
+    <td>
+        <span class="status-badge priority-{{ request.priority }}">{{ request.get_priority_display }}</span>
+    </td>
+    {% if user.is_paramedic %}
+    <td><small>{{ request.pickup_address|default:request.pickup_latitude }}, {{ request.pickup_longitude }}</small></td>
+    {% endif %}
+    {% if not user.is_patient %}
+    <td>
+        {% if request.paramedic %}
+            <i class="bi bi-person-check text-success me-1"></i>
+            {{ request.paramedic.get_full_name|default:request.paramedic.username }}
+        {% else %}
+            <i class="bi bi-person-dash text-muted me-1"></i><span class="text-muted">Not assigned</span>
+        {% endif %}
+    </td>
+    {% endif %}
+    <td><small>{{ request.created_at|date:"M d, Y H:i" }}</small></td>
+    <td>
+        <a href="{% url 'ambulance:request_detail' request.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a>
+        {% if enable_actions %}
+            {% include 'dashboard/_row_actions.html' %}
+        {% endif %}
+    </td>
+</tr>
+
+

@@ -1,0 +1,13 @@
+{% if request.status == 'assigned' and user.is_paramedic %}
+<button class="btn btn-sm btn-success" onclick="markEnRoute({{ request.pk }})"><i class="bi bi-arrow-right"></i></button>
+{% elif request.status == 'en_route' and user.is_paramedic %}
+<button class="btn btn-sm btn-warning" onclick="markArrived({{ request.pk }})"><i class="bi bi-geo-alt"></i></button>
+{% elif request.status == 'arrived' and user.is_paramedic %}
+<button class="btn btn-sm btn-success" onclick="markCompleted({{ request.pk }})"><i class="bi bi-check"></i></button>
+{% endif %}
+
+{% if user.is_admin_user and not request.paramedic %}
+<button class="btn btn-sm btn-outline-secondary" onclick="assignParamedic({{ request.pk }})"><i class="bi bi-person-plus"></i></button>
+{% endif %}
+
+

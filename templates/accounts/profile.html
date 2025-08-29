@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile - Emergency Ambulance System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="h4 mb-3"><i class="bi bi-person text-danger me-2"></i>My Profile</h1>
+    <div class="row g-3">
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Account Details</h5>
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Username</dt>
+                        <dd class="col-sm-8">{{ user.username }}</dd>
+                        <dt class="col-sm-4">Name</dt>
+                        <dd class="col-sm-8">{{ user.get_full_name|default:'-' }}</dd>
+                        <dt class="col-sm-4">Email</dt>
+                        <dd class="col-sm-8">{{ user.email|default:'-' }}</dd>
+                        <dt class="col-sm-4">Role</dt>
+                        <dd class="col-sm-8 text-capitalize">{{ user.role }}</dd>
+                        {% if user.is_paramedic %}
+                        <dt class="col-sm-4">Availability</dt>
+                        <dd class="col-sm-8">{{ user.is_available|yesno:"Available,Unavailable" }}</dd>
+                        {% endif %}
+                        <dt class="col-sm-4">Joined</dt>
+                        <dd class="col-sm-8">{{ user.date_joined|date:"M d, Y H:i" }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Security</h5>
+                    <p class="mb-3 text-muted">Manage your password and security preferences.</p>
+                    <a href="{% url 'accounts:change_password' %}" class="btn btn-primary"><i class="bi bi-key me-2"></i>Change Password</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+

@@ -56,6 +56,9 @@ class AmbulanceRequest(models.Model):
     # Additional notes
     notes = models.TextField(blank=True, null=True, help_text="Additional notes from paramedic or admin")
     
+    # Assigned ambulance (optional)
+    ambulance = models.ForeignKey('Ambulance', on_delete=models.SET_NULL, null=True, blank=True, related_name='requests')
+    
     def __str__(self):
         return f"Request #{self.id} - {self.patient.username} ({self.get_status_display()})"
     

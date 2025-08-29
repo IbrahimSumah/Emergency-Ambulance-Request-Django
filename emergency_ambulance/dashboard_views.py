@@ -120,3 +120,32 @@ def admin_dashboard(request):
     
     return render(request, 'dashboard/admin_dashboard.html', context)
 
+
+@login_required
+@admin_required
+def admin_reports(request):
+    """Admin analytics/Reports page"""
+    user = request.user
+    
+    # Basic aggregates (expand as needed)
+    requests_qs = AmbulanceRequest.objects.all()
+    kpis = {
+        'total': requests_qs.count(),
+        'pending': requests_qs.filter(status='pending').count(),
+        'assigned': requests_qs.filter(status='assigned').count(),
+        'en_route': requests_qs.filter(status='en_route').count(),
+        'arrived': requests_qs.filter(status='arrived').count(),
+        'completed': requests_qs.filter(status='completed').count(),
+        'cancelled': requests_qs.filter(status='cancelled').count(),
+    }
+    
+    by_priority = list(requests_qs.values('priority').annotate(count=Count('priority')).order_by('priority'))
+    by_status = list(requests_qs.values('status').annotate(count=Count('status')).order_by('status'))
+    
+    context = {
+        'kpis': kpis,
+        'by_priority': by_priority,
+        'by_status': by_status,
+        'user': user,
+    }
+    return render(request, 'dashboard/admin_reports.html', context)

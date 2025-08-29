@@ -1,0 +1,14 @@
+<div class="card dashboard-card h-100">
+    <div class="card-body stats-card">
+        <div class="stats-number {{ number_class|default:'' }}">{{ value }}</div>
+        <div class="stats-label">{{ label }}</div>
+        {% if icon_class %}
+        <i class="{{ icon_class }} position-absolute top-0 end-0 m-3 opacity-25" style="font-size: 2rem;"></i>
+        {% endif %}
+    </div>
+    {% if footer %}
+    <div class="card-footer bg-transparent border-0 small text-muted">{{ footer }}</div>
+    {% endif %}
+</div>
+
+

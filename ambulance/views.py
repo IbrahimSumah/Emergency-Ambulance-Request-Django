@@ -214,6 +214,36 @@ def accept_request(request, pk):
 
 
 @login_required
+@paramedic_required
+def paramedic_assigned_list(request):
+    """List requests assigned to current paramedic"""
+    requests = AmbulanceRequest.objects.filter(paramedic=request.user).order_by('-created_at')
+
+    paginator = Paginator(requests, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'ambulance/paramedic_assigned.html', {
+        'page_obj': page_obj,
+    })
+
+
+@login_required
+@paramedic_required
+def paramedic_pending_list(request):
+    """List pending requests available for paramedics"""
+    requests = AmbulanceRequest.objects.filter(status='pending').order_by('-priority', '-created_at')
+
+    paginator = Paginator(requests, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'ambulance/paramedic_pending.html', {
+        'page_obj': page_obj,
+    })
+
+
+@login_required
 @admin_required
 def ambulance_list(request):
     """List all ambulances (Admin only)"""
@@ -270,6 +300,17 @@ def ambulance_edit(request, pk):
     
     return render(request, 'ambulance/ambulance_form.html', context)
 
+
+@login_required
+@admin_required
+def ambulance_delete(request, pk):
+    """Delete ambulance (Admin only)"""
+    ambulance = get_object_or_404(Ambulance, pk=pk)
+    if request.method == 'POST':
+        ambulance.delete()
+        messages.success(request, 'Ambulance deleted successfully!')
+        return redirect('ambulance:ambulance_list')
+    return render(request, 'ambulance/ambulance_confirm_delete.html', {'ambulance': ambulance})
 
 @login_required
 @require_http_methods(["POST"])

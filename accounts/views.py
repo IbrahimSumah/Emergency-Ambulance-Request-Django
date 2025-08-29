@@ -150,6 +150,27 @@ def change_password_view(request):
 
 
 @login_required
+def manage_users_view(request):
+    """Admin: Manage users list with basic filters"""
+    if not request.user.is_admin_user():
+        messages.error(request, 'Only admins can access Manage Users.')
+        return redirect('accounts:dashboard_redirect')
+    
+    users = User.objects.all().order_by('-date_joined')
+    role = request.GET.get('role')
+    q = request.GET.get('q')
+    if role in ['patient', 'paramedic', 'admin']:
+        users = users.filter(role=role)
+    if q:
+        users = users.filter(models.Q(username__icontains=q) | models.Q(email__icontains=q))
+    
+    return render(request, 'accounts/manage_users.html', {
+        'users': users,
+        'role': role or '',
+        'q': q or '',
+    })
+
+@login_required
 @require_http_methods(["POST"])
 def toggle_availability(request):
     """Toggle paramedic availability (AJAX endpoint)"""

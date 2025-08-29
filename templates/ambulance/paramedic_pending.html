@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}Pending Requests - Emergency Ambulance System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h4 mb-0"><i class="bi bi-clock text-danger me-2"></i>Pending Requests</h1>
+        <a href="{% url 'ambulance:request_list' %}" class="btn btn-outline-secondary"><i class="bi bi-list-ul me-1"></i>All Requests</a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            {% if page_obj.object_list %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Patient</th>
+                            <th>Priority</th>
+                            <th>Location</th>
+                            <th>Created</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for request in page_obj.object_list %}
+                        <tr>
+                            <td><strong>#{{ request.id }}</strong></td>
+                            <td>
+                                <i class="bi bi-person text-primary me-1"></i>
+                                {{ request.patient.get_full_name|default:request.patient.username }}
+                            </td>
+                            <td><span class="status-badge priority-{{ request.priority }}">{{ request.get_priority_display }}</span></td>
+                            <td>
+                                <small>
+                                    {% if request.pickup_address %}
+                                        {{ request.pickup_address }}
+                                    {% elif request.pickup_latitude and request.pickup_longitude %}
+                                        {{ request.pickup_latitude }}, {{ request.pickup_longitude }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </small>
+                            </td>
+                            <td><small>{{ request.created_at|date:"M d, Y H:i" }}</small></td>
+                            <td>
+                                <form method="post" action="{% url 'ambulance:accept_request' request.pk %}">
+                                    {% csrf_token %}
+                                    <button class="btn btn-sm btn-success" type="submit"><i class="bi bi-check2 me-1"></i>Accept</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <nav aria-label="Page navigation" class="mt-3">
+                <ul class="pagination justify-content-end">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">Previous</span></li>
+                    {% endif %}
+                    <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+                    {% if page_obj.has_next %}
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">Next</span></li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                <h5 class="mt-3 text-muted">No pending requests</h5>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+

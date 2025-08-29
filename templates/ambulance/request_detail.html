@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block title %}Request #{{ request.id }} - Emergency Ambulance System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h4 mb-0"><i class="bi bi-eye text-danger me-2"></i>Request #{{ request.id }}</h1>
+        <div>
+            <a href="{% url 'ambulance:request_list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Back</a>
+            {% if user.is_admin_user or user.is_paramedic %}
+            <a href="{% url 'ambulance:update_status' request.pk %}" class="btn btn-primary"><i class="bi bi-pencil-square me-1"></i>Update Status</a>
+            {% endif %}
+            {% if user.is_admin_user and not request.paramedic %}
+            <a href="{% url 'ambulance:assign_paramedic' request.pk %}" class="btn btn-warning"><i class="bi bi-person-plus me-1"></i>Assign</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row mb-2">
+                        <div class="col-md-6">
+                            <div class="mb-2"><strong>Status:</strong> <span class="status-badge status-{{ request.status }}">{{ request.get_status_display }}</span></div>
+                            <div class="mb-2"><strong>Priority:</strong> <span class="status-badge priority-{{ request.priority }}">{{ request.get_priority_display }}</span></div>
+                            <div class="mb-2"><strong>Created:</strong> {{ request.created_at|date:"M d, Y H:i" }}</div>
+                            <div class="mb-2"><strong>Updated:</strong> {{ request.updated_at|date:"M d, Y H:i" }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-2"><strong>Patient:</strong> {{ request.patient.get_full_name|default:request.patient.username }}</div>
+                            <div class="mb-2"><strong>Paramedic:</strong> {% if request.paramedic %}{{ request.paramedic.get_full_name|default:request.paramedic.username }}{% else %}<span class="text-muted">Not assigned</span>{% endif %}</div>
+                            <div class="mb-2"><strong>Ambulance:</strong> {% if request.ambulance %}{{ request.ambulance.vehicle_number }}{% else %}<span class="text-muted">Not assigned</span>{% endif %}</div>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Pickup</h6>
+                            <div class="small text-muted">{{ request.pickup_address|default:"Coordinates" }}</div>
+                            <div class="small">{{ request.pickup_latitude }}, {{ request.pickup_longitude }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Destination</h6>
+                            <div class="small text-muted">{{ request.destination_address|default:"Coordinates" }}</div>
+                            <div class="small">{{ request.destination_latitude }}, {{ request.destination_longitude }}</div>
+                        </div>
+                    </div>
+
+                    {% if request.notes %}
+                    <hr>
+                    <div>
+                        <h6>Notes</h6>
+                        <p class="mb-0">{{ request.notes }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header bg-white"><strong>Status Updates</strong></div>
+                <div class="card-body">
+                    {% if status_updates %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>When</th>
+                                    <th>By</th>
+                                    <th>Old</th>
+                                    <th>New</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for su in status_updates %}
+                                <tr>
+                                    <td><small>{{ su.timestamp|date:"M d, Y H:i" }}</small></td>
+                                    <td><small>{{ su.updated_by.get_full_name|default:su.updated_by.username }}</small></td>
+                                    <td><span class="status-badge status-{{ su.old_status }}">{{ su.get_old_status_display }}</span></td>
+                                    <td><span class="status-badge status-{{ su.new_status }}">{{ su.get_new_status_display }}</span></td>
+                                    <td><small>{{ su.notes|default:'-' }}</small></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted mb-0">No status updates yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header bg-white"><strong>Quick Actions</strong></div>
+                <div class="card-body d-grid gap-2">
+                    {% if user.is_paramedic and request.paramedic == user %}
+                    {% if request.status == 'assigned' %}
+                    <a class="btn btn-success" href="{% url 'ambulance:update_status' request.pk %}"><i class="bi bi-arrow-right me-2"></i>Mark En Route</a>
+                    {% elif request.status == 'en_route' %}
+                    <a class="btn btn-warning" href="{% url 'ambulance:update_status' request.pk %}"><i class="bi bi-geo-alt me-2"></i>Mark Arrived</a>
+                    {% elif request.status == 'arrived' %}
+                    <a class="btn btn-primary" href="{% url 'ambulance:update_status' request.pk %}"><i class="bi bi-check me-2"></i>Mark Completed</a>
+                    {% endif %}
+                    {% endif %}
+                    {% if user.is_admin_user and request.status == 'pending' %}
+                    <a class="btn btn-outline-secondary" href="{% url 'ambulance:assign_paramedic' request.pk %}"><i class="bi bi-person-plus me-2"></i>Assign Paramedic</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
