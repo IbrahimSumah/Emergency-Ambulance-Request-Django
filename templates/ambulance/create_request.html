@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block title %}Request Ambulance - Emergency Ambulance System{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="text-center mb-4">
+                <i class="bi bi-truck-front-fill text-danger" style="font-size: 3rem;"></i>
+                <h2 class="mt-3 mb-2">Request Emergency Ambulance</h2>
+                <p class="text-muted">Fill out the form below to request emergency medical assistance</p>
+            </div>
+            
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-5">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.pickup_address.id_for_label }}" class="form-label">
+                                    <i class="bi bi-geo-alt me-2"></i>Pickup Address *
+                                </label>
+                                {{ form.pickup_address }}
+                                {% if form.pickup_address.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.pickup_address.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.destination_address.id_for_label }}" class="form-label">
+                                    <i class="bi bi-hospital me-2"></i>Destination Address
+                                </label>
+                                {{ form.destination_address }}
+                                {% if form.destination_address.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.destination_address.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.priority.id_for_label }}" class="form-label">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>Priority Level *
+                                </label>
+                                {{ form.priority }}
+                                {% if form.priority.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.priority.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.contact_phone.id_for_label }}" class="form-label">
+                                    <i class="bi bi-telephone me-2"></i>Contact Phone *
+                                </label>
+                                {{ form.contact_phone }}
+                                {% if form.contact_phone.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.contact_phone.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">
+                                <i class="bi bi-chat-text me-2"></i>Description of Emergency *
+                            </label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.description.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Please describe the medical emergency in detail</div>
+                        </div>
+                        
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {{ form.non_field_errors.0 }}
+                            </div>
+                        {% endif %}
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'accounts:dashboard_redirect' %}" class="btn btn-secondary me-md-2">
+                                <i class="bi bi-arrow-left me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-truck-front me-2"></i>Request Ambulance
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,292 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard - Emergency Ambulance System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-1">
+                        <i class="bi bi-shield-check text-danger me-2"></i>
+                        Admin Dashboard
+                    </h1>
+                    <p class="text-muted mb-0">Welcome back, {{ user.first_name|default:user.username }}!</p>
+                </div>
+                <div>
+                    <a href="{% url 'ambulance:request_list' %}" class="btn btn-danger">
+                        <i class="bi bi-gear me-2"></i>System Management
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Statistics Cards Row 1 -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card dashboard-card h-100">
+                <div class="card-body stats-card">
+                    <div class="stats-number text-primary">{{ stats.total_requests }}</div>
+                    <div class="stats-label">Total Requests</div>
+                    <i class="bi bi-list-ul position-absolute top-0 end-0 m-3 text-primary opacity-25" style="font-size: 2rem;"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card dashboard-card h-100">
+                <div class="card-body stats-card">
+                    <div class="stats-number text-warning">{{ stats.pending_requests }}</div>
+                    <div class="stats-label">Pending</div>
+                    <i class="bi bi-clock position-absolute top-0 end-0 m-3 text-warning opacity-25" style="font-size: 2rem;"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card dashboard-card h-100">
+                <div class="card-body stats-card">
+                    <div class="stats-number text-info">{{ stats.active_requests }}</div>
+                    <div class="stats-label">Active</div>
+                    <i class="bi bi-activity position-absolute top-0 end-0 m-3 text-info opacity-25" style="font-size: 2rem;"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card dashboard-card h-100">
+                <div class="card-body stats-card">
+                    <div class="stats-number text-success">{{ stats.completed_requests }}</div>
+                    <div class="stats-label">Completed</div>
+                    <i class="bi bi-check-circle position-absolute top-0 end-0 m-3 text-success opacity-25" style="font-size: 2rem;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Statistics Cards Row 2 -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card dashboard-card h-100">
+                <div class="card-body stats-card">
+                    <div class="stats-number text-secondary">{{ stats.total_users }}</div>
+                    <div class="stats-label">Total Users</div>
+                    <i class="bi bi-people position-absolute top-0 end-0 m-3 text-secondary opacity-25" style="font-size: 2rem;"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card dashboard-card h-100">
+                <div class="card-body stats-card">
+                    <div class="stats-number text-info">{{ stats.paramedics }}</div>
+                    <div class="stats-label">Paramedics</div>
+                    <i class="bi bi-ambulance position-absolute top-0 end-0 m-3 text-info opacity-25" style="font-size: 2rem;"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card dashboard-card h-100">
+                <div class="card-body stats-card">
+                    <div class="stats-number text-success">{{ stats.available_paramedics }}</div>
+                    <div class="stats-label">Available</div>
+                    <i class="bi bi-person-check position-absolute top-0 end-0 m-3 text-success opacity-25" style="font-size: 2rem;"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card dashboard-card h-100">
+                <div class="card-body stats-card">
+                    <div class="stats-number text-warning">{{ stats.available_ambulances }}</div>
+                    <div class="stats-label">Available Ambulances</div>
+                    <i class="bi bi-truck position-absolute top-0 end-0 m-3 text-warning opacity-25" style="font-size: 2rem;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Recent Requests -->
+        <div class="col-lg-8 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-white border-bottom">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-clock-history me-2"></i>Recent Requests
+                        </h5>
+                        <a href="{% url 'ambulance:request_list' %}" class="btn btn-sm btn-outline-primary">
+                            View All
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if recent_requests %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Patient</th>
+                                        <th>Status</th>
+                                        <th>Priority</th>
+                                        <th>Paramedic</th>
+                                        <th>Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for request in recent_requests %}
+                                    <tr>
+                                        <td>
+                                            <strong>#{{ request.id }}</strong>
+                                        </td>
+                                        <td>
+                                            <i class="bi bi-person text-primary me-1"></i>
+                                            {{ request.patient.get_full_name|default:request.patient.username }}
+                                        </td>
+                                        <td>
+                                            <span class="status-badge status-{{ request.status }}">
+                                                {{ request.get_status_display }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="status-badge priority-{{ request.priority }}">
+                                                {{ request.get_priority_display }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if request.paramedic %}
+                                                <i class="bi bi-person-check text-success me-1"></i>
+                                                {{ request.paramedic.get_full_name|default:request.paramedic.username }}
+                                            {% else %}
+                                                <i class="bi bi-person-dash text-muted me-1"></i>
+                                                <span class="text-muted">Not assigned</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <small>{{ request.created_at|date:"M d, Y H:i" }}</small>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'ambulance:request_detail' request.pk %}" 
+                                               class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <button class="btn btn-sm btn-outline-secondary" onclick="assignParamedic({{ request.pk }})">
+                                                <i class="bi bi-person-plus"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                            <h5 class="mt-3 text-muted">No requests yet</h5>
+                            <p class="text-muted">The system is ready for emergency requests.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Actions & Info -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">
+                        <i class="bi bi-lightning-charge me-2"></i>Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-3">
+                        <a href="{% url 'ambulance:request_list' %}" class="btn btn-primary">
+                            <i class="bi bi-list-ul me-2"></i>Manage Requests
+                        </a>
+                        
+                        <a href="#" class="btn btn-outline-success">
+                            <i class="bi bi-people me-2"></i>Manage Users
+                        </a>
+                        
+                        <a href="#" class="btn btn-outline-info">
+                            <i class="bi bi-ambulance me-2"></i>Manage Ambulances
+                        </a>
+                        
+                        <a href="#" class="btn btn-outline-warning">
+                            <i class="bi bi-graph-up me-2"></i>View Reports
+                        </a>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <!-- System Status -->
+                    <div class="alert alert-info">
+                        <h6 class="alert-heading">
+                            <i class="bi bi-info-circle me-2"></i>System Status
+                        </h6>
+                        <ul class="mb-0 small">
+                            <li><strong>Active Requests:</strong> {{ stats.active_requests }}</li>
+                            <li><strong>Available Paramedics:</strong> {{ stats.available_paramedics }}</li>
+                            <li><strong>Available Ambulances:</strong> {{ stats.available_ambulances }}</li>
+                            <li><strong>Response Time:</strong> < 5 min</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Contact Info -->
+                    <div class="card bg-light border-0">
+                        <div class="card-body p-3">
+                            <h6 class="card-title">
+                                <i class="bi bi-telephone me-2"></i>Emergency Contacts
+                            </h6>
+                            <p class="card-text small mb-2">
+                                <strong>Emergency:</strong> 911<br>
+                                <strong>Support:</strong> (555) 123-4567<br>
+                                <strong>Admin:</strong> (555) 123-4569
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-refresh dashboard every 60 seconds for admin
+    setInterval(function() {
+        location.reload();
+    }, 60000);
+    
+    // Add pulse animation to active requests count
+    if ({{ stats.active_requests }} > 0) {
+        const activeCard = document.querySelector('.stats-number.text-info');
+        if (activeCard) {
+            activeCard.style.animation = 'pulse 2s infinite';
+        }
+    }
+    
+    // Function to assign paramedic
+    function assignParamedic(requestId) {
+        if (confirm('Assign paramedic to this request?')) {
+            // Add AJAX call here to assign paramedic
+            console.log('Assigning paramedic to request', requestId);
+        }
+    }
+</script>
+
+<style>
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+</style>
+{% endblock %}
