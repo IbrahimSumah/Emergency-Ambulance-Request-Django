@@ -166,6 +166,25 @@ LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/accounts/login/'
 
+# Email Configuration for Password Reset
+# For development: Use console backend to see emails in terminal
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# For production: Uncomment below and add your Gmail credentials
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'your-gmail@gmail.com'  # Your Gmail address
+# EMAIL_HOST_PASSWORD = 'your-app-password'  # Gmail app password (16 characters)
+# DEFAULT_FROM_EMAIL = 'Emergency Ambulance System <your-gmail@gmail.com>'
+
+# Development email settings
+DEFAULT_FROM_EMAIL = 'Emergency Ambulance System <noreply@ambulance.com>'
+
+# Password Reset Settings
+PASSWORD_RESET_TIMEOUT = 3600  # 1 hour in seconds
+
 # User roles
 USER_ROLES = (
     ('patient', 'Patient'),

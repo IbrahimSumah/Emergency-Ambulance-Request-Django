@@ -5,9 +5,17 @@ from django.contrib import messages
 from django.urls import reverse
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
-from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth.forms import PasswordChangeForm, PasswordResetForm, SetPasswordForm
 from django.contrib.auth import update_session_auth_hash
-from .forms import CustomUserCreationForm, CustomAuthenticationForm, UserProfileForm, ParamedicProfileForm, ExtendedProfileForm
+from django.contrib.auth.tokens import default_token_generator
+from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.conf import settings
+from django.db import models
+from .forms import CustomUserCreationForm, CustomAuthenticationForm, UserProfileForm, ParamedicProfileForm, ExtendedProfileForm, AdminUserEditForm, AdminParamedicEditForm
 from .models import User, UserProfile
 from ambulance.models import AmbulanceRequest
 
@@ -164,11 +172,17 @@ def manage_users_view(request):
     if q:
         users = users.filter(models.Q(username__icontains=q) | models.Q(email__icontains=q))
     
-    return render(request, 'accounts/manage_users.html', {
+    context = {
         'users': users,
         'role': role or '',
         'q': q or '',
-    })
+        'total_users': User.objects.count(),
+        'total_patients': User.objects.filter(role='patient').count(),
+        'total_paramedics': User.objects.filter(role='paramedic').count(),
+        'total_admins': User.objects.filter(role='admin').count(),
+    }
+    
+    return render(request, 'accounts/manage_users.html', context)
 
 @login_required
 @require_http_methods(["POST"])
@@ -198,3 +212,172 @@ def dashboard_redirect(request):
         return redirect('paramedic_dashboard')
     else:
         return redirect('patient_dashboard')
+
+
+@login_required
+def admin_edit_user_view(request, user_id):
+    """Admin: Edit user details"""
+    if not request.user.is_admin_user():
+        messages.error(request, 'Only admins can edit users.')
+        return redirect('accounts:dashboard_redirect')
+    
+    user_to_edit = get_object_or_404(User, id=user_id)
+    
+    # Ensure user profile exists
+    try:
+        profile = user_to_edit.profile
+    except UserProfile.DoesNotExist:
+        profile = UserProfile.objects.create(user=user_to_edit)
+    
+    if request.method == 'POST':
+        user_form = AdminUserEditForm(request.POST, request.FILES, instance=user_to_edit)
+        profile_form = ExtendedProfileForm(request.POST, instance=profile)
+        
+        # Add paramedic form if user is paramedic
+        paramedic_form = None
+        if user_to_edit.is_paramedic():
+            paramedic_form = AdminParamedicEditForm(request.POST, instance=user_to_edit)
+        
+        forms_valid = user_form.is_valid() and profile_form.is_valid()
+        if paramedic_form:
+            forms_valid = forms_valid and paramedic_form.is_valid()
+        
+        if forms_valid:
+            user_form.save()
+            profile_form.save()
+            if paramedic_form:
+                paramedic_form.save()
+            messages.success(request, f'User {user_to_edit.username} has been updated successfully!')
+            return redirect('accounts:manage_users')
+    else:
+        user_form = AdminUserEditForm(instance=user_to_edit)
+        profile_form = ExtendedProfileForm(instance=profile)
+        paramedic_form = AdminParamedicEditForm(instance=user_to_edit) if user_to_edit.is_paramedic() else None
+    
+    context = {
+        'user_to_edit': user_to_edit,
+        'user_form': user_form,
+        'profile_form': profile_form,
+        'paramedic_form': paramedic_form,
+    }
+    
+    return render(request, 'accounts/admin_edit_user.html', context)
+
+
+@login_required
+def admin_delete_user_view(request, user_id):
+    """Admin: Delete user"""
+    if not request.user.is_admin_user():
+        messages.error(request, 'Only admins can delete users.')
+        return redirect('accounts:dashboard_redirect')
+    
+    user_to_delete = get_object_or_404(User, id=user_id)
+    
+    # Prevent admin from deleting themselves
+    if user_to_delete == request.user:
+        messages.error(request, 'You cannot delete your own account.')
+        return redirect('accounts:manage_users')
+    
+    if request.method == 'POST':
+        username = user_to_delete.username
+        user_to_delete.delete()
+        messages.success(request, f'User {username} has been deleted successfully!')
+        return redirect('accounts:manage_users')
+    
+    context = {
+        'user_to_delete': user_to_delete,
+    }
+    
+    return render(request, 'accounts/admin_delete_user.html', context)
+
+
+def password_reset_request_view(request):
+    """Custom password reset request view"""
+    if request.method == 'POST':
+        form = PasswordResetForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data['email']
+            try:
+                user = User.objects.get(email=email)
+                # Generate token and uid
+                token = default_token_generator.make_token(user)
+                uid = urlsafe_base64_encode(force_bytes(user.pk))
+                
+                # Create reset URL
+                reset_url = request.build_absolute_uri(
+                    reverse('accounts:password_reset_confirm', kwargs={'uidb64': uid, 'token': token})
+                )
+                
+                # Prepare email context
+                context = {
+                    'user': user,
+                    'reset_url': reset_url,
+                    'site_name': 'Emergency Ambulance System',
+                }
+                
+                # Render email templates
+                subject = 'Password Reset - Emergency Ambulance System'
+                html_message = render_to_string('accounts/emails/password_reset_email.html', context)
+                plain_message = render_to_string('accounts/emails/password_reset_email.txt', context)
+                
+                # Send email
+                send_mail(
+                    subject=subject,
+                    message=plain_message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[email],
+                    html_message=html_message,
+                    fail_silently=False,
+                )
+                
+                messages.success(request, 'Password reset email has been sent to your email address.')
+                return redirect('accounts:password_reset_done')
+                
+            except User.DoesNotExist:
+                # Don't reveal that the email doesn't exist
+                messages.success(request, 'Password reset email has been sent to your email address.')
+                return redirect('accounts:password_reset_done')
+    else:
+        form = PasswordResetForm()
+    
+    return render(request, 'accounts/password_reset.html', {'form': form})
+
+
+def password_reset_done_view(request):
+    """Password reset done view"""
+    return render(request, 'accounts/password_reset_done.html')
+
+
+def password_reset_confirm_view(request, uidb64, token):
+    """Password reset confirm view"""
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+    
+    if user is not None and default_token_generator.check_token(user, token):
+        if request.method == 'POST':
+            form = SetPasswordForm(user, request.POST)
+            if form.is_valid():
+                form.save()
+                messages.success(request, 'Your password has been reset successfully!')
+                return redirect('accounts:password_reset_complete')
+        else:
+            form = SetPasswordForm(user)
+        
+        context = {
+            'form': form,
+            'validlink': True,
+        }
+    else:
+        context = {
+            'validlink': False,
+        }
+    
+    return render(request, 'accounts/password_reset_confirm.html', context)
+
+
+def password_reset_complete_view(request):
+    """Password reset complete view"""
+    return render(request, 'accounts/password_reset_complete.html')

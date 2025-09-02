@@ -114,3 +114,50 @@ class ExtendedProfileForm(forms.ModelForm):
             if field_name not in ['email_notifications', 'sms_notifications']:
                 field.widget.attrs['class'] = 'form-control'
 
+
+class AdminUserEditForm(forms.ModelForm):
+    """Form for admin to edit user details"""
+    
+    class Meta:
+        model = User
+        fields = ['username', 'first_name', 'last_name', 'email', 'phone_number', 
+                 'address', 'date_of_birth', 'emergency_contact', 'medical_conditions', 
+                 'role', 'is_active', 'profile_image']
+        widgets = {
+            'date_of_birth': forms.DateInput(attrs={'type': 'date'}),
+            'address': forms.Textarea(attrs={'rows': 3}),
+            'medical_conditions': forms.Textarea(attrs={'rows': 3}),
+            'role': forms.Select(attrs={'class': 'form-select'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Add Bootstrap classes
+        for field_name, field in self.fields.items():
+            if field_name == 'profile_image':
+                field.widget.attrs['class'] = 'form-control'
+            elif field_name == 'role':
+                field.widget.attrs['class'] = 'form-select'
+            elif field_name == 'is_active':
+                field.widget.attrs['class'] = 'form-check-input'
+            elif isinstance(field.widget, forms.Textarea):
+                field.widget.attrs['class'] = 'form-control'
+            else:
+                field.widget.attrs['class'] = 'form-control'
+
+
+class AdminParamedicEditForm(forms.ModelForm):
+    """Form for admin to edit paramedic-specific fields"""
+    
+    class Meta:
+        model = User
+        fields = ['license_number', 'is_available']
+        widgets = {
+            'is_available': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['license_number'].widget.attrs['class'] = 'form-control'
+

@@ -55,6 +55,11 @@
                         </form>
                         
                         <div class="text-center">
+                            <div class="mb-2">
+                                <a href="{% url 'accounts:password_reset' %}" class="text-decoration-none text-danger">
+                                    <i class="bi bi-key me-1"></i>Forgot Password?
+                                </a>
+                            </div>
                             <p class="mb-0">Don't have an account? 
                                 <a href="{% url 'accounts:register' %}" class="text-decoration-none">
                                     Create one here

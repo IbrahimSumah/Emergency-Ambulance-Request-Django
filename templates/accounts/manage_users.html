@@ -9,6 +9,62 @@
         <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Back to Dashboard</a>
     </div>
 
+    <!-- Statistics Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Total Users</h6>
+                            <h4 class="mb-0">{{ total_users }}</h4>
+                        </div>
+                        <i class="bi bi-people" style="font-size: 2rem; opacity: 0.7;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Patients</h6>
+                            <h4 class="mb-0">{{ total_patients }}</h4>
+                        </div>
+                        <i class="bi bi-person-heart" style="font-size: 2rem; opacity: 0.7;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Paramedics</h6>
+                            <h4 class="mb-0">{{ total_paramedics }}</h4>
+                        </div>
+                        <i class="bi bi-truck" style="font-size: 2rem; opacity: 0.7;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Admins</h6>
+                            <h4 class="mb-0">{{ total_admins }}</h4>
+                        </div>
+                        <i class="bi bi-shield-check" style="font-size: 2rem; opacity: 0.7;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="card mb-4">
         <div class="card-body">
             <form method="get" class="row g-3 align-items-end">
@@ -39,21 +95,67 @@
                 <table class="table table-hover align-middle">
                     <thead>
                         <tr>
+                            <th>Profile</th>
                             <th>Username</th>
                             <th>Name</th>
                             <th>Email</th>
                             <th>Role</th>
+                            <th>Status</th>
                             <th>Joined</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for u in users %}
                         <tr>
+                            <td>
+                                {% if u.profile_image %}
+                                    <img src="{{ u.profile_image.url }}" alt="Profile" 
+                                         class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+                                {% else %}
+                                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center" 
+                                         style="width: 40px; height: 40px;">
+                                        <i class="bi bi-person text-muted"></i>
+                                    </div>
+                                {% endif %}
+                            </td>
                             <td>{{ u.username }}</td>
                             <td>{{ u.get_full_name|default:'-' }}</td>
                             <td>{{ u.email|default:'-' }}</td>
-                            <td class="text-capitalize">{{ u.role }}</td>
-                            <td><small>{{ u.date_joined|date:"M d, Y H:i" }}</small></td>
+                            <td>
+                                <span class="badge bg-{{ u.role|yesno:'success,primary,danger' }}">
+                                    {{ u.get_role_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ u.is_active|yesno:'success,secondary' }}">
+                                    {{ u.is_active|yesno:"Active,Inactive" }}
+                                </span>
+                                {% if u.is_paramedic %}
+                                    <span class="badge bg-{{ u.is_available|yesno:'info,warning' }} ms-1">
+                                        {{ u.is_available|yesno:"Available,Busy" }}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td><small>{{ u.date_joined|date:"M d, Y" }}</small></td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'accounts:profile' %}?user={{ u.id }}" 
+                                       class="btn btn-sm btn-outline-primary" title="View Profile">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{% url 'accounts:admin_edit_user' u.id %}" 
+                                       class="btn btn-sm btn-outline-warning" title="Edit User">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    {% if u != request.user %}
+                                    <a href="{% url 'accounts:admin_delete_user' u.id %}" 
+                                       class="btn btn-sm btn-outline-danger" title="Delete User">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>

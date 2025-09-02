@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete User: {{ user_to_delete.username }} - Emergency Ambulance System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h4 mb-0">
+            <i class="bi bi-trash text-danger me-2"></i>Delete User: {{ user_to_delete.username }}
+        </h1>
+        <a href="{% url 'accounts:manage_users' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back to Manage Users
+        </a>
+    </div>
+
+    <div class="alert alert-danger">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <strong>Warning:</strong> This action cannot be undone. All data associated with this user will be permanently deleted.
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">User Information</h5>
+            <div class="row">
+                <div class="col-md-3 text-center">
+                    {% if user_to_delete.profile_image %}
+                        <img src="{{ user_to_delete.profile_image.url }}" alt="Profile Photo" 
+                             class="rounded-circle mb-3" style="width: 100px; height: 100px; object-fit: cover;">
+                    {% else %}
+                        <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mb-3" 
+                             style="width: 100px; height: 100px; margin: 0 auto;">
+                            <i class="bi bi-person-fill text-muted" style="font-size: 2.5rem;"></i>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-9">
+                    <dl class="row">
+                        <dt class="col-sm-3">Username</dt>
+                        <dd class="col-sm-9">{{ user_to_delete.username }}</dd>
+                        <dt class="col-sm-3">Name</dt>
+                        <dd class="col-sm-9">{{ user_to_delete.get_full_name|default:'-' }}</dd>
+                        <dt class="col-sm-3">Email</dt>
+                        <dd class="col-sm-9">{{ user_to_delete.email|default:'-' }}</dd>
+                        <dt class="col-sm-3">Role</dt>
+                        <dd class="col-sm-9">
+                            <span class="badge bg-{{ user_to_delete.role|yesno:'success,primary,danger' }}">
+                                {{ user_to_delete.get_role_display }}
+                            </span>
+                        </dd>
+                        <dt class="col-sm-3">Joined</dt>
+                        <dd class="col-sm-9">{{ user_to_delete.date_joined|date:"M d, Y H:i" }}</dd>
+                        <dt class="col-sm-3">Status</dt>
+                        <dd class="col-sm-9">
+                            <span class="badge bg-{{ user_to_delete.is_active|yesno:'success,secondary' }}">
+                                {{ user_to_delete.is_active|yesno:"Active,Inactive" }}
+                            </span>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mt-3">
+        <div class="card-body">
+            <h5 class="card-title text-danger">Confirm Deletion</h5>
+            <p class="mb-3">
+                Are you sure you want to delete the user <strong>{{ user_to_delete.username }}</strong>? 
+                This will permanently remove:
+            </p>
+            <ul class="mb-3">
+                <li>User account and profile information</li>
+                <li>All associated ambulance requests (if patient)</li>
+                <li>All assigned ambulance requests (if paramedic)</li>
+                <li>Profile photos and uploaded files</li>
+                <li>All user activity and history</li>
+            </ul>
+            
+            <form method="post" class="d-inline">
+                {% csrf_token %}
+                <div class="d-flex justify-content-end">
+                    <a href="{% url 'accounts:manage_users' %}" class="btn btn-secondary me-2">
+                        <i class="bi bi-x-lg me-1"></i>Cancel
+                    </a>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i>Delete User Permanently
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
