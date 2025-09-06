@@ -1,0 +1,90 @@
+*Project Title:* RapidResponse: Hospital-Centric Emergency Dispatch System Prototype
+
+*Project Overview:* 
+Build a functional, user-friendly prototype for a web-based ambulance dispatch system tailored for a single hospital. The system must facilitate emergency call intake, resource dispatch, real-time status updates, and field communication, all through an intuitive interface.
+
+*Technology Stack:*
+*   *Backend:* Django (Python)
+*   *Database:* SQLite (for prototyping)
+*   *Frontend:* HTML, CSS, JavaScript, Bootstrap 5
+*   *Real-Time Features:* Django Channels (WebSockets)
+*   *REST API:* Django REST Framework (DRF)
+*   *Maps:* Leaflet.js (OpenStreetMap) or Google Maps JavaScript API
+*   *Icons:* Font Awesome
+*   *Dynamic UI:* HTMX (for efficient partial page updates)
+
+---
+
+### Core Functional Requirements:
+
+*1. Django App Structure:*
+Create a project with these four apps:
+*   core: For shared models (Custom User), base templates, utilities.
+*   emergencies: For the EmergencyCall model and its lifecycle (statuses: 'Received', 'Dispatched', 'On Scene', 'Transporting', 'Closed').
+*   dispatch: For the Ambulance model, dispatcher dashboard, and real-time operations.
+*   profiles: For user profiles (DispatcherProfile, ParamedicProfile, PublicProfile).
+
+*2. Database Models (SQLite):*
+*   Define a CustomUser model in core extending AbstractUser.
+*   Define Hospital model in core with name, address, location (latitude/longitude), and contact info.
+*   Define EmergencyCall model in emergencies with fields for caller_number, location (lat/long), emergency_type, priority, status (ForeignKey to a CallStatus model), timestamp, and assigned_ambulance (ForeignKey to Ambulance).
+*   Define Ambulance model in dispatch with unit_number, type (BLS/ALS), status ('Available', 'Busy', 'Offline'), current_location (lat/long), and current_paramedic (ForeignKey to User).
+*   Define profile models in profiles with OneToOne links to User.
+
+*3. User Authentication & Roles:*
+*   Implement Django Allauth for robust login/signup. Redirect users based on their profile type after login.
+*   *Public User:* Signs up, creates a PublicProfile, sees a minimal dashboard to manage their info.
+*   *Dispatcher:* Has a DispatcherProfile, sees the main operational dashboard upon login.
+*   *Paramedic:* Has a ParamedicProfile linked to an Ambulance, sees a field-focused view.
+
+**4. Landing Page (core/index.html):**
+*   Clean, professional design with Bootstrap. Prominent "REQUEST AMBULANCE" button.
+*   Simple emergency form (minimal fields: location with auto-detect, emergency type dropdown, callback number).
+*   Section explaining benefits and CTA to "Create Account for Faster Response".
+
+**5. dispatcher Dashboard (dispatch/dashboard.html):**
+*   *Layout:* A single-page application-like layout with three columns.
+*   *Left Column:* Live list of active emergency calls, sorted by priority, auto-updating via WebSockets.
+*   *Center Column:* Interactive map (Leaflet/Google Maps) showing:
+    *   Emergency call locations as pulsing red markers.
+    *   Ambulance locations as colored icons (green=available, blue=en route, red=on scene).
+    *   Clicking a marker shows details and available actions.
+*   *Right Column:* Resource status panel showing all ambulances, their status, and crew. Hospital status indicator (e.g., "ED Capacity: High").
+*   *Functionality:* Dispatcher can drag an ambulance icon to a emergency marker to dispatch, or click a "Dispatch Nearest" button. All actions must trigger immediate UI updates via WebSockets.
+
+*6. Paramedic Field Interface:*
+*   A simple, mobile-friendly view for paramedics.
+*   Displays the current assigned emergency details.
+*   Large, touch-friendly buttons to update call status: "En Route", "On Scene", "Transporting", "At Hospital", "Back in Service".
+*   Each button click sends an API call to update the EmergencyCall.status and broadcasts the update via WebSockets to the dispatcher dashboard.
+
+*7. APIs (Django REST Framework):*
+*   POST /api/emergencies/: Public endpoint to create a new emergency call. (Throttle heavily to prevent abuse).
+*   GET /api/emergencies/: Authenticated endpoint for dispatchers to list calls.
+*   PATCH /api/emergencies/<id>/: For paramedics to update call status.
+*   GET /api/ambulances/: Returns list and real-time status of all ambulances.
+*   PATCH /api/ambulances/<id>/location/: For paramedic app to periodically send its GPS location.
+
+*8. Real-Time Communication (Django Channels):*
+*   Implement WebSocket consumers for the dispatcher dashboard.
+*   On any change to an EmergencyCall or Ambulance model, broadcast the update to all connected dispatcher dashboards.
+*   This allows the map and lists to update in real-time without refreshing.
+
+*9. Security & UX Considerations:*
+*   Use Django's @login_required and permission decorators extensively.
+*   All forms must have CSRF protection.
+*   Implement basic rate limiting on the public emergency API.
+*   The UI must be responsive and work on mobile, tablet, and desktop.
+*   Use Bootstrap alerts for user feedback (errors, success messages).
+*- Implement simple error handling pages (404, 500).
+
+*10. Testing & Demo Data:*
+*   Create a Django management command to seed the database with demo data:
+    *   1 Hospital
+    *   2 Dispatcher users
+    *   4 Paramedic users linked to 4 Ambulances (2 BLS, 2 ALS)
+    *   A few sample EmergencyCalls in various states.
+
+---
+
+*Deliverable:* A fully functional Django prototype that demonstrates the complete flow from a public user reporting an emergency, a dispatcher assigning resources, and a paramedic updating the status, with all changes reflected in real-time on a central dashboard. The code must be well-structured, commented, and ready for further development.
